@@ -117,7 +117,7 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     services: {
       samples_loaded: samplesService.samples !== null,
-      evidence_loaded: samplesService.getAllDocIds().length > 0  
+      evidence_loaded: samplesService.getAllDocIds().length > 0
     }
   });
 });
@@ -196,15 +196,15 @@ app.use((req, res) => {
  */
 app.use((error, req, res, next) => {
   console.error('[Error]', error);
-  
+
   // Некорректный JSON в теле запроса
   if (error.type === 'entity.parse.failed') {
-    return res.status(400).json({ 
+    return res.status(400).json({
       error: 'Invalid JSON',
       message: 'Request body contains invalid JSON'
     });
   }
-  
+
   // Превышен размер загружаемого файла (multer)
   if (error.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({
@@ -212,7 +212,7 @@ app.use((error, req, res, next) => {
       message: `Maximum file size is ${config.upload.maxFileSize / 1024 / 1024}MB`
     });
   }
-  
+
   // Общая ошибка сервера
   res.status(500).json({
     error: 'Internal server error',
@@ -241,17 +241,30 @@ async function startServer() {
     console.log('='.repeat(60));
     console.log('PDF Evidence Annotation Service');
     console.log('='.repeat(60));
-    
+
+    const fs = require('fs');
+    try {
+      await fs.promises.access(config.paths.samplesJson, fs.constants.W_OK);
+    } catch (error) {
+      console.warn(`[Init] Cannot write to ${config.paths.samplesJson}, attempting chmod...`);
+      try {
+        await fs.promises.chmod(config.paths.samplesJson, 0o666);
+        console.log('[Init] Fixed permissions');
+      } catch (chmodError) {
+        console.error('[Init] Failed to fix permissions:', chmodError.message);
+      }
+    }
+
     // Шаг 1: Загрузка датасета
     console.log('\n[1/3] Loading samples dataset...');
     await samplesService.loadSamples();
     console.log(`✓ Samples loaded: ${samplesService.getAllDocIds().length} documents found`);
-    
+
     // Шаг 2: Загрузка разметки
     console.log('\n[2/3] Loading existing evidence regions...');
     const evidenceDocs = Object.keys(samplesService.samples).length;
     console.log(`✓ Evidence regions loaded: ${evidenceDocs} documents with annotations`);
-    
+
     // Шаг 3: Подключение к Qdrant (не блокирует запуск)
     console.log('\n[3/3] Connecting to Qdrant...');
     try {
@@ -261,7 +274,7 @@ async function startServer() {
       console.warn('⚠ Qdrant initialization failed (non-critical):', error.message);
       console.warn('  The service will work but Qdrant regions will not be available');
     }
-    
+
     // Запуск HTTP-сервера
     console.log('\n' + '='.repeat(60));
     app.listen(config.port, () => {
