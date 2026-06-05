@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Evidence Annotation Tool</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <!-- ====================================================================== -->
+    <!-- Header                                                                 -->
+    <!-- ====================================================================== -->
+    <header class="header">
+        <div class="header-left">
+            <h1>PDF Evidence Annotation</h1>
+        </div>
+        <div class="header-center">
+            <div class="tabs" id="mainTabs">
+                <button class="tab active" data-tab="documents">Документы</button>
+                <button class="tab" data-tab="questions">Вопросы</button>
+                <button class="tab" data-tab="viewer">Просмотр</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="connectionStatus" class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Подключение...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====================================================================== -->
+    <!-- Main Container                                                        -->
+    <!-- ====================================================================== -->
+    <div class="main-container">
+
+        <!-- ================================================================== -->
+        <!-- Вкладка: Документы                                                 -->
+        <!-- ================================================================== -->
+        <div class="tab-content active" id="tab-documents">
+            <div class="documents-panel">
+                <div class="documents-search">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon"></span>
+                        <input type="text" id="docSearchInput" placeholder="Поиск документов..." class="search-input">
+                    </div>
+                    <div class="documents-stats">
+                        <span id="documentsCount">0 документов</span>
+                    </div>
+                </div>
+                <div class="documents-grid" id="documentsGrid">
+                    <div class="documents-empty">
+                        <div class="empty-icon"></div>
+                        <p>Загрузка списка документов...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================== -->
+        <!-- Вкладка: Вопросы                                                   -->
+        <!-- ================================================================== -->
+        <div class="tab-content" id="tab-questions">
+            <div class="questions-panel">
+                <!-- Список вопросов -->
+                <div class="questions-sidebar">
+                    <div class="questions-search">
+                        <input type="text" id="questionSearchInput" placeholder="Поиск вопросов..."
+                            class="search-input">
+                    </div>
+                    <div class="questions-list" id="questionsList">
+                        <div class="questions-empty">
+                            <p>Выберите документ для просмотра вопросов</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Детали вопроса -->
+                <div class="questions-detail" id="questionDetail">
+                    <div class="detail-placeholder">
+                        <div class="empty-icon"></div>
+                        <p>Выберите вопрос для просмотра</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================== -->
+        <!-- Вкладка: Просмотр                                                  -->
+        <!-- ================================================================== -->
+        <div class="tab-content" id="tab-viewer">
+            <div class="viewer-layout">
+
+                <!-- Левая панель -->
+                <aside class="viewer-sidebar" id="viewerSidebar">
+                    <!-- Информация о документе -->
+                    <div class="sidebar-section">
+                        <h2 class="section-title">Информация</h2>
+                        <div class="doc-info-content">
+                            <div class="info-row">
+                                <span class="info-label">Файл:</span>
+                                <span class="info-value" id="docFileName">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Страниц:</span>
+                                <span class="info-value" id="docPages">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Вопросов:</span>
+                                <span class="info-value" id="docQuestions">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Текущий вопрос -->
+                    <div class="sidebar-section">
+                        <h2 class="section-title"> Текущий вопрос</h2>
+                        <div class="current-question" id="currentQuestion">
+                            <p class="no-question">Вопрос не выбран</p>
+                        </div>
+                        <div class="question-navigation">
+                            <button class="btn btn-small" id="prevQuestionBtn" disabled>◀ Предыдущий</button>
+                            <button class="btn btn-small" id="nextQuestionBtn" disabled>Следующий ▶</button>
+                        </div>
+                    </div>
+
+                    <!-- Разметка -->
+                    <div class="sidebar-section">
+                        <h2 class="section-title">Разметка</h2>
+                        <div class="annotation-buttons">
+                            <button class="btn btn-success btn-full" id="saveAnnotationBtn" disabled> Сохранить</button>
+                            <button class="btn btn-danger btn-full" id="clearSelectionBtn"> Очистить выбор</button>
+                        </div>
+                        <div class="annotation-info">
+                            <div class="info-row">
+                                <span class="info-label">Выбрано регионов:</span>
+                                <span class="info-value" id="selectedRegionsCount">0</span>
+                            </div>
+                        </div>
+                        <div class="selected-regions-list hidden" id="selectedRegionsList">
+                            <h3 class="subsection-title">Выбранные регионы</h3>
+                            <div id="selectedRegionsItems"></div>
+                        </div>
+                    </div>
+
+                    <!-- Легенда -->
+                    <div class="sidebar-section">
+                        <h2 class="section-title">Легенда</h2>
+                        <div class="legend-list" id="legendList"></div>
+                    </div>
+                </aside>
+
+                <!-- Правая часть: PDF и тулбар -->
+                <main class="viewer-main">
+                    <!-- Тулбар -->
+                    <div class="viewer-toolbar" id="viewerToolbar">
+                        <!-- Навигация по страницам -->
+                        <div class="toolbar-left">
+                            <button class="btn btn-icon" id="prevPageBtn" title="Назад">◀</button>
+                            <span class="page-indicator">
+                                <input type="number" id="pageInput" min="1" value="1" class="page-input">
+                                / <span id="totalPages">0</span>
+                            </span>
+                            <button class="btn btn-icon" id="nextPageBtn" title="Вперёд">▶</button>
+                        </div>
+
+                        <!-- Зум -->
+                        <div class="toolbar-center">
+                            <div class="zoom-controls">
+                                <button class="btn btn-icon" id="zoomOutBtn">−</button>
+                                <span class="zoom-level" id="zoomLevel">100%</span>
+                                <button class="btn btn-icon" id="zoomInBtn">+</button>
+                                <button class="btn btn-icon" id="fitWidthBtn"> `<-->`</button>
+                            </div>
+                        </div>
+
+                        <!-- Инструменты рисования -->
+                        <div class="toolbar-right">
+                            <button class="btn btn-icon" id="drawModeBtn" title="Рисовать (R)">✏️</button>
+                            <button class="btn btn-icon" id="deleteRegionBtn" title="Удалить (Del)">🗑️</button>
+                            <div class="toolbar-divider"></div>
+                            <input type="color" id="regionColor" value="#00ff00" class="color-picker" title="Цвет">
+                        </div>
+                    </div>
+
+                    <!-- Canvas-контейнер -->
+                    <div class="canvas-wrapper" id="canvasWrapper">
+                        <div class="canvas-container" id="canvasContainer">
+                            <!-- PDF рендерится на нижнем canvas -->
+                            <canvas id="pdfCanvas"></canvas>
+                            <!-- Регионы рисуются на верхнем canvas -->
+                            <canvas id="drawCanvas"></canvas>
+                        </div>
+                        <!-- Индикатор загрузки -->
+                        <div class="loading-overlay hidden" id="loadingOverlay">
+                            <div class="spinner"></div>
+                            <p>Загрузка...</p>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контейнер для toast-уведомлений -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ====================================================================== -->
+    <!-- Scripts                                                                -->
+    <!-- ====================================================================== -->
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- Приложение -->
+    <script src="/js/api.js"></script>
+    <script src="/js/pdfViewer.js"></script>
+    <script src="/js/regionDrawer.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

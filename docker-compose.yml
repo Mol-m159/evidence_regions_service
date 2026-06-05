@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  evidence-regions:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: evidence-regions-service
+    ports:
+      - "3000:3000"  
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - RUNNING_IN_DOCKER=true  
+      - HOST_ADDRESS=host.docker.internal
+      # Настройки Qdrant 
+      - QDRANT_URL=http://host.docker.internal:6333
+      - QDRANT_COLLECTION=documents
+      # Пути к данным
+      - SAMPLES_JSON_PATH=/app/evidence_regions_service/data/samples.json
+      - EVIDENCE_REGIONS_PATH=/app/evidence_regions_service/data/evidence_regions.json
+      - DOCUMENTS_DIR=/app/evidence_regions_service/data/documents
+    volumes:
+      - ./data:/app/evidence_regions_service/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
