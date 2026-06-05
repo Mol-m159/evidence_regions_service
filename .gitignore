@@ -1,0 +1,5 @@
+echo node_modules/ > .gitignore
+echo npm-debug.log >> .gitignore
+echo .env >> .gitignore
+echo dist/ >> .gitignore
+echo build/ >> .gitignore
